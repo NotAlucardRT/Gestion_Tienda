@@ -1,0 +1,430 @@
+{
+  "base_de_datos": "Tienda_Online",
+  "motor": "MongoDB 4.0+",
+  "descripcion": "Base de datos documental para la aplicación de tienda virtual. Gestiona usuarios, productos, carritos de compra y pedidos.",
+  "colecciones": [
+
+    {
+      "nombre": "usuarios",
+      "descripcion": "Almacena la información de cada usuario registrado en la tienda, incluyendo credenciales de acceso, historial de compras y estado de la cuenta.",
+      "indices": [
+        { "campo": "email", "tipo": "único", "descripcion": "Garantiza que no existan dos usuarios con el mismo correo electrónico." }
+      ],
+      "schema": {
+        "_id": {
+          "tipo": "string",
+          "descripcion": "Identificador único del usuario. Generado con el patrón 'user_NNN'",
+          "ejemplo": "user_001",
+          "requerido": true
+        },
+        "nombre": {
+          "tipo": "string",
+          "descripcion": "Nombre completo del usuario.",
+          "ejemplo": "Juan Pérez",
+          "requerido": true
+        },
+        "email": {
+          "tipo": "string",
+          "descripcion": "Correo electrónico del usuario. Sirve como identificador de inicio de sesión. Debe ser único en la colección.",
+          "ejemplo": "juan@email.com",
+          "requerido": true
+        },
+        "contraseña": {
+          "tipo": "string",
+          "descripcion": "Hash SHA-256 de la contraseña del usuario. Nunca se almacena la contraseña en texto plano.",
+          "ejemplo": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+          "requerido": true
+        },
+        "fecha_registro": {
+          "tipo": "datetime",
+          "descripcion": "Fecha y hora en que el usuario fue registrado en el sistema.",
+          "ejemplo": "2026-05-24T10:30:00Z",
+          "requerido": true
+        },
+        "historial_compras": {
+          "tipo": "array",
+          "items_tipo": "string",
+          "descripcion": "Lista de identificadores de pedidos realizados por el usuario. Cada elemento referencia un documento de la colección 'pedidos'.",
+          "ejemplo": ["PED_00001", "PED_00003"],
+          "requerido": true,
+          "valor_por_defecto": []
+        },
+        "estado": {
+          "tipo": "string",
+          "descripcion": "Estado actual de la cuenta del usuario.",
+          "valores_permitidos": ["activo", "inactivo", "suspendido"],
+          "ejemplo": "activo",
+          "requerido": true,
+          "valor_por_defecto": "activo"
+        }
+      },
+      "documento_ejemplo": {
+        "_id": "user_001",
+        "nombre": "Juan Pérez",
+        "email": "juan@email.com",
+        "contraseña": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+        "fecha_registro": "2026-05-24T10:30:00Z",
+        "historial_compras": ["PED_00001"],
+        "estado": "activo"
+      }
+    },
+
+    {
+      "nombre": "productos",
+      "descripcion": "Catálogo completo de productos disponibles en la tienda. Incluye información comercial, inventario y valoración.",
+      "indices": [
+        { "campo": "categoria", "tipo": "simple", "descripcion": "Optimiza las búsquedas por categoría de producto." },
+        { "campo": "nombre", "tipo": "texto", "descripcion": "Habilita búsqueda de texto sobre el nombre del producto." },
+        { "campo": "descripcion", "tipo": "texto", "descripcion": "Habilita búsqueda de texto sobre la descripción del producto." }
+      ],
+      "schema": {
+        "_id": {
+          "tipo": "string",
+          "descripcion": "Identificador único del producto. Generado con el patrón 'prod_NNN' (ej: 'prod_001').",
+          "ejemplo": "prod_001",
+          "requerido": true
+        },
+        "nombre": {
+          "tipo": "string",
+          "descripcion": "Nombre comercial del producto.",
+          "ejemplo": "Laptop Dell XPS 13",
+          "requerido": true
+        },
+        "categoria": {
+          "tipo": "string",
+          "descripcion": "Categoría a la que pertenece el producto. Se usa para filtrar productos en la tienda.",
+          "valores_ejemplo": ["Electrónica", "Accesorios", "Monitores", "Audio", "Almacenamiento", "Componentes"],
+          "ejemplo": "Electrónica",
+          "requerido": true
+        },
+        "precio": {
+          "tipo": "double",
+          "descripcion": "Precio del producto en dólares (USD). Debe ser mayor a cero.",
+          "ejemplo": 1200.00,
+          "requerido": true
+        },
+        "stock": {
+          "tipo": "int",
+          "descripcion": "Cantidad de unidades disponibles en inventario. Se decrementa automáticamente al realizar una compra. No puede ser negativo.",
+          "ejemplo": 15,
+          "requerido": true
+        },
+        "descripcion": {
+          "tipo": "string",
+          "descripcion": "Descripción detallada del producto.",
+          "ejemplo": "Laptop ultraportátil de 13 pulgadas con procesador Intel i7",
+          "requerido": true
+        },
+        "imagen": {
+          "tipo": "string",
+          "descripcion": "Nombre del archivo de imagen del producto.",
+          "ejemplo": "laptop_dell.jpg",
+          "requerido": false
+        },
+        "valoracion": {
+          "tipo": "double",
+          "descripcion": "Puntuación promedio del producto en escala de 1 a 5.",
+          "ejemplo": 4.8,
+          "requerido": false,
+          "restricciones": "Valor entre 1.0 y 5.0"
+        },
+        "fecha_creacion": {
+          "tipo": "datetime",
+          "descripcion": "Fecha y hora en que el producto fue registrado en el catálogo.",
+          "ejemplo": "2026-05-24T10:30:00Z",
+          "requerido": true
+        }
+      },
+      "documento_ejemplo": {
+        "_id": "prod_001",
+        "nombre": "Laptop Dell XPS 13",
+        "categoria": "Electrónica",
+        "precio": 1200.00,
+        "stock": 15,
+        "descripcion": "Laptop ultraportátil de 13 pulgadas con procesador Intel i7",
+        "imagen": "laptop_dell.jpg",
+        "valoracion": 4.8,
+        "fecha_creacion": "2026-05-24T10:30:00Z"
+      }
+    },
+
+    {
+      "nombre": "carritos",
+      "descripcion": "Almacena el carrito de compras activo de cada usuario. Cada usuario tiene exactamente un documento de carrito, el cual se crea al momento del registro y se vacía automáticamente tras una compra exitosa.",
+      "relaciones": [
+        { "campo": "_id / usuario_id", "referencia": "usuarios._id", "tipo": "uno a uno" },
+        { "campo": "productos[].producto_id", "referencia": "productos._id", "tipo": "muchos a muchos (embebido)" }
+      ],
+      "schema": {
+        "_id": {
+          "tipo": "string",
+          "descripcion": "Identificador del carrito. Igual al usuario_id del propietario, garantizando la relación uno a uno.",
+          "ejemplo": "user_001",
+          "requerido": true
+        },
+        "usuario_id": {
+          "tipo": "string",
+          "descripcion": "Referencia al _id del usuario propietario del carrito.",
+          "ejemplo": "user_001",
+          "requerido": true
+        },
+        "productos": {
+          "tipo": "array",
+          "descripcion": "Lista de productos añadidos al carrito. Cada elemento es un subdocumento con el detalle del ítem.",
+          "requerido": true,
+          "valor_por_defecto": [],
+          "items_schema": {
+            "producto_id": {
+              "tipo": "string",
+              "descripcion": "Referencia al _id del producto en la colección 'productos'.",
+              "ejemplo": "prod_001",
+              "requerido": true
+            },
+            "cantidad": {
+              "tipo": "int",
+              "descripcion": "Número de unidades del producto en el carrito.",
+              "ejemplo": 2,
+              "requerido": true
+            },
+            "precio_unitario": {
+              "tipo": "double",
+              "descripcion": "Precio del producto en el momento en que fue agregado al carrito (en USD).",
+              "ejemplo": 1200.00,
+              "requerido": true
+            },
+            "subtotal": {
+              "tipo": "double",
+              "descripcion": "Resultado de cantidad × precio_unitario para este ítem.",
+              "ejemplo": 2400.00,
+              "requerido": true
+            },
+            "fecha_agregado": {
+              "tipo": "datetime",
+              "descripcion": "Fecha y hora en que el producto fue añadido al carrito.",
+              "ejemplo": "2026-05-24T10:50:00Z",
+              "requerido": true
+            }
+          }
+        },
+        "total": {
+          "tipo": "double",
+          "descripcion": "Suma de todos los subtotales de los productos en el carrito (en USD). Se recalcula automáticamente al agregar, modificar o eliminar productos.",
+          "ejemplo": 2400.00,
+          "requerido": true,
+          "valor_por_defecto": 0.0
+        },
+        "fecha_creacion": {
+          "tipo": "datetime",
+          "descripcion": "Fecha y hora en que se creó el carrito (coincide con el registro del usuario).",
+          "ejemplo": "2026-05-24T10:30:00Z",
+          "requerido": true
+        },
+        "fecha_actualizacion": {
+          "tipo": "datetime",
+          "descripcion": "Fecha y hora de la última modificación del carrito (agregar, eliminar o vaciar productos).",
+          "ejemplo": "2026-05-24T11:00:00Z",
+          "requerido": true
+        }
+      },
+      "documento_ejemplo": {
+        "_id": "user_001",
+        "usuario_id": "user_001",
+        "productos": [
+          {
+            "producto_id": "prod_001",
+            "cantidad": 1,
+            "precio_unitario": 1200.00,
+            "subtotal": 1200.00,
+            "fecha_agregado": "2026-05-24T10:50:00Z"
+          },
+          {
+            "producto_id": "prod_002",
+            "cantidad": 2,
+            "precio_unitario": 99.99,
+            "subtotal": 199.98,
+            "fecha_agregado": "2026-05-24T10:55:00Z"
+          }
+        ],
+        "total": 1399.98,
+        "fecha_creacion": "2026-05-24T10:30:00Z",
+        "fecha_actualizacion": "2026-05-24T11:00:00Z"
+      }
+    },
+
+    {
+      "nombre": "pedidos",
+      "descripcion": "Registro histórico e inmutable de todas las compras completadas. Un pedido se genera a partir del carrito del usuario y no puede modificarse tras su creación. El stock de los productos se actualiza al momento de crearse el pedido.",
+      "indices": [
+        { "campo": "usuario_id", "tipo": "simple", "descripcion": "Optimiza la consulta del historial de pedidos por usuario." }
+      ],
+      "relaciones": [
+        { "campo": "usuario_id", "referencia": "usuarios._id", "tipo": "muchos a uno" },
+        { "campo": "productos[].producto_id", "referencia": "productos._id", "tipo": "muchos a muchos (embebido, snapshot al momento de la compra)" }
+      ],
+      "schema": {
+        "_id": {
+          "tipo": "string",
+          "descripcion": "Número único de pedido. Generado con el patrón 'PED_NNNNN' (ej: 'PED_00001').",
+          "ejemplo": "PED_00001",
+          "requerido": true
+        },
+        "usuario_id": {
+          "tipo": "string",
+          "descripcion": "Referencia al _id del usuario que realizó la compra.",
+          "ejemplo": "user_001",
+          "requerido": true
+        },
+        "productos": {
+          "tipo": "array",
+          "descripcion": "Snapshot de los productos comprados al momento de la transacción. Los datos se copian desde el carrito y no se alteran aunque el producto original cambie de precio o sea eliminado.",
+          "requerido": true,
+          "items_schema": {
+            "producto_id": {
+              "tipo": "string",
+              "descripcion": "Referencia al _id del producto en la colección 'productos'.",
+              "ejemplo": "prod_001",
+              "requerido": true
+            },
+            "cantidad": {
+              "tipo": "int",
+              "descripcion": "Unidades compradas de este producto.",
+              "ejemplo": 1,
+              "requerido": true
+            },
+            "precio_unitario": {
+              "tipo": "double",
+              "descripcion": "Precio por unidad al momento de la compra (en USD).",
+              "ejemplo": 1200.00,
+              "requerido": true
+            },
+            "subtotal": {
+              "tipo": "double",
+              "descripcion": "Resultado de cantidad × precio_unitario para este ítem.",
+              "ejemplo": 1200.00,
+              "requerido": true
+            },
+            "fecha_agregado": {
+              "tipo": "datetime",
+              "descripcion": "Fecha en que el producto fue añadido originalmente al carrito.",
+              "ejemplo": "2026-05-24T10:50:00Z",
+              "requerido": false
+            }
+          }
+        },
+        "total": {
+          "tipo": "double",
+          "descripcion": "Monto total de la compra en dólares (USD).",
+          "ejemplo": 1200.00,
+          "requerido": true
+        },
+        "estado": {
+          "tipo": "string",
+          "descripcion": "Estado actual del pedido.",
+          "valores_permitidos": ["completado", "en_proceso", "cancelado", "entregado"],
+          "ejemplo": "completado",
+          "requerido": true,
+          "valor_por_defecto": "completado"
+        },
+        "fecha_pedido": {
+          "tipo": "datetime",
+          "descripcion": "Fecha y hora en que se procesó y registró el pedido.",
+          "ejemplo": "2026-05-24T11:05:00Z",
+          "requerido": true
+        },
+        "fecha_entrega_estimada": {
+          "tipo": "datetime",
+          "descripcion": "Fecha estimada de entrega del pedido.",
+          "ejemplo": "2026-05-30T11:05:00Z",
+          "requerido": true
+        },
+        "metodo_pago": {
+          "tipo": "string",
+          "descripcion": "Método de pago utilizado para la compra.",
+          "valores_permitidos": ["efectivo", "tarjeta_credito", "tarjeta_debito", "transferencia"],
+          "ejemplo": "efectivo",
+          "requerido": true,
+          "valor_por_defecto": "efectivo"
+        }
+      },
+      "documento_ejemplo": {
+        "_id": "PED_00001",
+        "usuario_id": "user_001",
+        "productos": [
+          {
+            "producto_id": "prod_001",
+            "cantidad": 1,
+            "precio_unitario": 1200.00,
+            "subtotal": 1200.00,
+            "fecha_agregado": "2026-05-24T10:50:00Z"
+          }
+        ],
+        "total": 1200.00,
+        "estado": "completado",
+        "fecha_pedido": "2026-05-24T11:05:00Z",
+        "fecha_entrega_estimada": "2026-05-30T11:05:00Z",
+        "metodo_pago": "efectivo"
+      }
+    }
+
+  ],
+
+  "relaciones_entre_colecciones": {
+    "descripcion": "Diagrama de relaciones entre las colecciones de la base de datos.",
+    "relaciones": [
+      {
+        "desde": "usuarios",
+        "hacia": "carritos",
+        "cardinalidad": "1 a 1",
+        "descripcion": "Cada usuario posee exactamente un carrito. El _id del carrito es igual al _id del usuario."
+      },
+      {
+        "desde": "usuarios",
+        "hacia": "pedidos",
+        "cardinalidad": "1 a muchos",
+        "descripcion": "Un usuario puede tener múltiples pedidos a lo largo del tiempo. La referencia se almacena en usuarios.historial_compras[] y en pedidos.usuario_id."
+      },
+      {
+        "desde": "productos",
+        "hacia": "carritos",
+        "cardinalidad": "muchos a muchos",
+        "descripcion": "Múltiples productos pueden estar en múltiples carritos. La relación se representa como subdocumentos dentro de carritos.productos[]."
+      },
+      {
+        "desde": "productos",
+        "hacia": "pedidos",
+        "cardinalidad": "muchos a muchos",
+        "descripcion": "Los productos de un pedido son un snapshot al momento de la compra. Se almacenan como subdocumentos en pedidos.productos[] para preservar el precio histórico."
+      }
+    ]
+  },
+
+  "operaciones_crud_implementadas": {
+    "CREATE": [
+      { "operacion": "Registrar usuario", "coleccion": "usuarios", "metodo": "insert_one" },
+      { "operacion": "Crear carrito de usuario nuevo", "coleccion": "carritos", "metodo": "insert_one" },
+      { "operacion": "Crear pedido desde carrito", "coleccion": "pedidos", "metodo": "insert_one" }
+    ],
+    "READ": [
+      { "operacion": "Obtener todos los productos", "coleccion": "productos", "metodo": "find" },
+      { "operacion": "Buscar productos por categoría", "coleccion": "productos", "metodo": "find con filtro" },
+      { "operacion": "Buscar productos por nombre o descripción", "coleccion": "productos", "metodo": "find con $regex" },
+      { "operacion": "Obtener producto por ID", "coleccion": "productos", "metodo": "find_one" },
+      { "operacion": "Obtener stock de un producto", "coleccion": "productos", "metodo": "find_one" },
+      { "operacion": "Obtener categorías únicas", "coleccion": "productos", "metodo": "distinct" },
+      { "operacion": "Obtener carrito del usuario", "coleccion": "carritos", "metodo": "find_one" },
+      { "operacion": "Obtener historial de pedidos", "coleccion": "pedidos", "metodo": "find con filtro" },
+      { "operacion": "Obtener detalles de un pedido", "coleccion": "pedidos", "metodo": "find_one" },
+      { "operacion": "Verificar usuario por email", "coleccion": "usuarios", "metodo": "find_one" }
+    ],
+    "UPDATE": [
+      { "operacion": "Agregar producto al carrito", "coleccion": "carritos", "metodo": "replace_one" },
+      { "operacion": "Eliminar producto del carrito", "coleccion": "carritos", "metodo": "replace_one" },
+      { "operacion": "Vaciar carrito tras compra", "coleccion": "carritos", "metodo": "update_one con $set" },
+      { "operacion": "Actualizar stock de productos tras compra", "coleccion": "productos", "metodo": "update_one con $inc" },
+      { "operacion": "Agregar pedido al historial del usuario", "coleccion": "usuarios", "metodo": "update_one con $push" }
+    ],
+    "DELETE": [
+      { "operacion": "Eliminar producto del carrito", "coleccion": "carritos", "metodo": "replace_one (filtrado del array en Python)" }
+    ]
+  }
+}
