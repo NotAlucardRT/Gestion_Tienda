@@ -125,12 +125,17 @@ Histórico de compras completadas
 - **Python 3.8+**
 - **MongoDB 4.0+**
 - **pymongo 4.6.0**
+- **CustomTkinter**
 
 ### Instalación de Dependencias
 
 ```bash
 # Instalar pymongo
 pip install -r requirements.txt
+```
+```bash
+# Instalar CustomTkinter
+pip install customtkinter
 ```
 
 O directamente:
@@ -176,7 +181,7 @@ mongo
 ### 3. Ejecutar la aplicación
 
 ```bash
-python Actividad_8_MichaelRuiz.py
+python Gestion_Tienda.py
 ```
 
 ---
