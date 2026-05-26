@@ -1,7 +1,7 @@
 # ============================================================
 # APLICACIÓN DE TIENDA ONLINE CON MONGODB
-# Desarrolladores: Equipo Bases de Datos
-# Asignatura: Bases de Datos - Actividad 8
+# Desarrolladores: Michael David Ruiz Torres - Luisa María Puentes Torres
+# Asignatura: Bases de Datos - Proyecto Final
 # ============================================================
 
 from tkinter import messagebox
